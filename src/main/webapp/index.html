@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="uk">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Книга відгуків</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <h1>Книга відгуків</h1>
+
+        <form id="f" method="POST" action="/comments">
+            <label>Автор (≤64)
+                <input name="author" maxlength="64" required />
+            </label>
+            <label>Текст (≤1000)
+                <textarea name="text" maxlength="1000" required rows="4"></textarea>
+            </label>
+            <button type="submit">Додати</button>
+        </form>
+
+        <h2>Відгуки:</h2>
+        <ul id="comments"></ul>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
