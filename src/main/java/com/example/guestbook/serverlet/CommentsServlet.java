@@ -85,8 +85,8 @@ public class CommentsServlet extends HttpServlet {
       resp.setContentType("application/json;charset=UTF-8");
       mapper.writeValue(resp.getOutputStream(), Map.of(
           "error", "Validation failed",
-          "author", (author == null || author.isBlank() || author.length() > 64) ? "Поле автор обов'язкове, не більше 64 символи" : null,
-          "text", (text == null || text.isBlank() || text.length() > 1000) ? "Поле текст обов'язкове, не більше 1000 символів" : null
+          "author", (author == null || author.isBlank() || author.length() > 64) ? "Поле автор обов'язкове, не більше ніж 64 символи" : null,
+          "text", (text == null || text.isBlank() || text.length() > 1000) ? "Поле текст обов'язкове, не більше ніж 1000 символів" : null
       ));
       return;
    }
