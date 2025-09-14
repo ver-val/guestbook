@@ -1,0 +1,23 @@
+# Maven target directory
+/target/
+
+# IDE files
+.vscode/
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# MacOS system files
+.DS_Store
+
+# Logs
+*.log
+
+# H2 database files
+/data/*.mv.db
+/data/*.trace.db
+
+# Temporary files
+*.tmp
+*.swp
