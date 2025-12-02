@@ -1,5 +1,7 @@
-# Maven target directory
+# Maven target directories
 /target/
+/**/target/
+.m2/
 
 # IDE files
 .vscode/

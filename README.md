@@ -1,67 +1,61 @@
-# Книга відгуків (Guestbook)
+# Каталог книг (мульти-модульний Maven)
 
-Простий веб-додаток на **Java + Servlets + JDBC + H2**, що реалізує книгу відгуків.
+Багатомодульний застосунок на **Java 21 + Servlets (Jetty 11) + JDBC + H2** із трьома модулями:
+- `core` — доменні моделі, порти, бізнес-правила.
+- `persistence` — JDBC/H2-реалізації портів, ініціалізація схеми.
+- `web` — сервлети та HTTP API (war), запуск через Jetty.
 
 ## Вимоги
-- **JDK**: 21
-- **Maven**: 3.9.x+
-- **Jetty**: 11 (через `jetty-maven-plugin`)
+- JDK 21
+- Maven 3.9+
+- Порт за замовчуванням: `8080`
 
-## Запуск
+## Збірка та запуск
 ```bash
-mvn jetty:run
+# Запуск веб-модуля на Jetty 11
+mvn -pl web -am jetty:run
 ```
 
-Після запуску відкрити у браузері:
-- [http://localhost:8080/](http://localhost:8080/) — головна сторінка з формою і списком відгуків
+Змінні середовища для БД (необов’язково):
+- `DB_URL` (default `jdbc:h2:file:./data/library;AUTO_SERVER=TRUE`)
+- `DB_USER` (default `sa`)
+- `DB_PASSWORD` (default ``)
+- `DB_INIT_DATA` (`true|false`, за замовчуванням true — заповнюється базовими книгами)
 
-## База даних
-- **H2 (file mode)**
-- JDBC URL: `jdbc:h2:file:./data/guest;AUTO_SERVER=TRUE`
-- Файл БД створюється у директорії `./data/guest.mv.db`
+## HTTP API (UTF-8 + application/json)
+- `GET /books?q=&page=&size=&sort=` — список книг, сортування по `id|title|author` (`sort=title,desc`).
+- `GET /books/{id}` — картка книги + сторінка коментарів (`page`/`size` для коментарів).
+- `GET /books/{id}/comments` — пагіновані коментарі до книги.
+- `POST /books/{id}/comments` — створити коментар: `{"author": "...", "text": "..."}` (валідація: `author<=64`, `text<=1000`).
+- `DELETE /comments/{id}` — видалити коментар (доступно лише протягом 24 годин після створення, інакше `409 Conflict`).
 
-Таблиця `comments` створюється автоматично при старті.
+Коди відповіді: `200/201/204` успіх, `400` валідація/некоректні параметри, `404` не знайдено, `409` бізнес-конфлікт, `500` неочікувана помилка.
 
-## Ендпоїнти
-### `GET /`
-- Головна сторінка
-- Віддає HTML через `IndexServlet`
-- Містить:
-  - Форму для додавання відгуку (`author`, `text`)
-  - Список відгуків (останній зверху), який завантажується через `GET /comments`
-- CSS і JS підключені через папку `webapp` (`/css/styles.css`, `/js/script.js`)
-- Сторінка не перезавантажується при додаванні нового відгуку
-
-### `GET /comments`
-- Повертає JSON-список відгуків (новіші зверху).
-- Приклад відповіді:
-```json
-[
-  {
-    "id": 1,
-    "author": "Автор 1",
-    "text": "Текст 1",
-    "createdAt": "2025-09-14T18:34:56Z"
-  }
-]
-```
-
-### `POST /comments`
-- Додає новий відгук.
-- Параметри:
-  - `author` (обов’язково, ≤64 символи)
-  - `text` (обов’язково, ≤1000 символів)
-- Успіх: `204 No Content`
-- Помилки:
-  - `400 Bad Request` (валідація)
-  - `500 Internal Server Error` (проблеми з БД)
-- Приклад відповіді на валідаційну помилку:
+Формат помилки (єдиний):
 ```json
 {
-  "error": "Validation failed",
-  "author": "Поле автор обов'язкове, не більше ніж 64 символи",
-  "text": null
+  "timestamp": "2024-02-02T12:00:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/books/1/comments",
+  "details": {
+    "author": "required, up to 64 characters"
+  }
 }
 ```
 
----
+## Логування
+- SLF4J + Logback, console appenders, рівень ROOT=INFO.
+- INFO: створення/видалення коментарів з ключовими полями.
+- WARN: усі 4xx у веб-шарі, ERROR: 5xx.
+
+## Архітектурні правила (ArchUnit)
+- `web` не залежить від `persistence`.
+- `core` не залежить від Servlet/JDBC.
+- Контролери лише в `web`, репозиторії/DAO лише в `persistence`.
+
+Запуск тесту:
+```bash
+mvn -pl web -am test -Dtest=ArchitectureTest
+```
