@@ -5,10 +5,7 @@ import com.example.guestbook.core.exception.DomainException;
 import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.web.error.ErrorResponse;
-import com.example.guestbook.web.http.config.ApplicationInitializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,18 +18,11 @@ import java.util.Collections;
 import java.util.Map;
 
 public abstract class BaseServlet extends HttpServlet {
-    protected Logger log = LoggerFactory.getLogger(getClass());
-    protected ObjectMapper objectMapper;
+    protected final Logger log = LoggerFactory.getLogger(getClass());
+    protected final ObjectMapper objectMapper;
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        Object mapper = config.getServletContext().getAttribute(ApplicationInitializer.OBJECT_MAPPER_ATTR);
-        if (mapper instanceof ObjectMapper m) {
-            this.objectMapper = m;
-        } else {
-            this.objectMapper = new ObjectMapper().findAndRegisterModules();
-        }
+    protected BaseServlet(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     protected void writeJson(HttpServletResponse resp, int status, Object body) throws IOException {

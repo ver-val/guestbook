@@ -8,10 +8,7 @@ import com.example.guestbook.core.domain.Sort;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.service.CatalogService;
 import com.example.guestbook.core.service.CommentService;
-import com.example.guestbook.web.http.config.ApplicationInitializer;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -22,18 +19,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@WebServlet(urlPatterns = "/books/*")
 public class BookServlet extends BaseServlet {
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "title", "author");
-    private transient CatalogService catalogService;
-    private transient CommentService commentService;
+    private final CatalogService catalogService;
+    private final CommentService commentService;
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        var context = config.getServletContext();
-        this.catalogService = (CatalogService) context.getAttribute(ApplicationInitializer.CATALOG_SERVICE_ATTR);
-        this.commentService = (CommentService) context.getAttribute(ApplicationInitializer.COMMENT_SERVICE_ATTR);
+    public BookServlet(CatalogService catalogService, CommentService commentService, ObjectMapper objectMapper) {
+        super(objectMapper);
+        this.catalogService = catalogService;
+        this.commentService = commentService;
     }
 
     @Override

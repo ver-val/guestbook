@@ -6,7 +6,9 @@ import com.example.guestbook.core.domain.PageRequest;
 import com.example.guestbook.core.domain.Sort;
 import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CatalogService {
     private final CatalogRepositoryPort catalogRepository;
 

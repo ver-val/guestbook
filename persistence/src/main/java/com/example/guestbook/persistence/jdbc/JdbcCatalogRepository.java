@@ -5,6 +5,7 @@ import com.example.guestbook.core.domain.Page;
 import com.example.guestbook.core.domain.PageRequest;
 import com.example.guestbook.core.domain.Sort;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,6 +18,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
+@Repository
 public class JdbcCatalogRepository implements CatalogRepositoryPort {
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "title", "author");
     private final DataSource dataSource;

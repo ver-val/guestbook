@@ -2,25 +2,19 @@ package com.example.guestbook.web.http;
 
 import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.service.CommentService;
-import com.example.guestbook.web.http.config.ApplicationInitializer;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = "/comments/*")
 public class CommentServlet extends BaseServlet {
-    private transient CommentService commentService;
+    private final CommentService commentService;
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        var context = config.getServletContext();
-        this.commentService = (CommentService) context.getAttribute(ApplicationInitializer.COMMENT_SERVICE_ATTR);
+    public CommentServlet(CommentService commentService, ObjectMapper objectMapper) {
+        super(objectMapper);
+        this.commentService = commentService;
     }
 
     @Override
