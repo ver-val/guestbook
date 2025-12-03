@@ -4,6 +4,7 @@ import com.example.guestbook.core.domain.Comment;
 import com.example.guestbook.core.domain.Page;
 import com.example.guestbook.core.domain.PageRequest;
 import com.example.guestbook.core.port.CommentRepositoryPort;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class JdbcCommentRepository implements CommentRepositoryPort {
     private final DataSource dataSource;
 

@@ -10,6 +10,7 @@ import com.example.guestbook.core.port.CatalogRepositoryPort;
 import com.example.guestbook.core.port.CommentRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -17,6 +18,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class CommentService {
     private static final Logger log = LoggerFactory.getLogger(CommentService.class);
     private static final Duration DELETE_WINDOW = Duration.ofHours(24);
@@ -27,15 +29,9 @@ public class CommentService {
 
     public CommentService(CommentRepositoryPort commentRepository,
                           CatalogRepositoryPort catalogRepository) {
-        this(commentRepository, catalogRepository, Clock.systemUTC());
-    }
-
-    public CommentService(CommentRepositoryPort commentRepository,
-                          CatalogRepositoryPort catalogRepository,
-                          Clock clock) {
         this.commentRepository = commentRepository;
         this.catalogRepository = catalogRepository;
-        this.clock = clock;
+        this.clock = Clock.systemUTC();
     }
 
     public Page<Comment> getComments(long bookId, PageRequest pageRequest) {
