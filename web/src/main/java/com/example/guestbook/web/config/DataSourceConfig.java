@@ -2,14 +2,8 @@ package com.example.guestbook.web.config;
 
 import com.example.guestbook.core.spi.PersistenceConfig;
 import com.example.guestbook.persistence.jdbc.db.DbInit;
-import com.example.guestbook.web.http.BookServlet;
-import com.example.guestbook.web.http.CommentServlet;
-import com.example.guestbook.core.service.CatalogService;
-import com.example.guestbook.core.service.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.Filter;
-import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.h2.jdbcx.JdbcDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,10 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import org.h2.jdbcx.JdbcDataSource;
-
 @Configuration
-public class ServletConfig {
+public class DataSourceConfig {
 
     @Bean
     public PersistenceConfig persistenceConfig() {
@@ -48,33 +40,6 @@ public class ServletConfig {
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper().findAndRegisterModules();
-    }
-
-    @Bean
-    public ServletRegistrationBean<BookServlet> bookServlet(CatalogService catalogService,
-                                                            CommentService commentService,
-                                                            ObjectMapper objectMapper) {
-        return new ServletRegistrationBean<>(
-                new BookServlet(catalogService, commentService, objectMapper),
-                "/books/*"
-        );
-    }
-
-    @Bean
-    public ServletRegistrationBean<CommentServlet> commentServlet(CommentService commentService, ObjectMapper objectMapper) {
-        return new ServletRegistrationBean<>(
-                new CommentServlet(commentService, objectMapper),
-                "/comments/*"
-        );
-    }
-
-    @Bean
-    public FilterRegistrationBean<Filter> rootRedirectFilter() {
-        FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new com.example.guestbook.web.http.IndexRedirectFilter());
-        registration.addUrlPatterns("/*");
-        registration.setOrder(Integer.MIN_VALUE);
-        return registration;
     }
 
     private void ensureDataDirectory(String jdbcUrl) {
