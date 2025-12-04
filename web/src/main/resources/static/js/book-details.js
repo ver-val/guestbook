@@ -1,6 +1,8 @@
 (() => {
   const ctx = {
     baseUrl: document.body.dataset.baseUrl || '',
+    apiBase: (document.body.dataset.baseUrl || '') + '/api',
+    booksApi: (document.body.dataset.baseUrl || '') + '/api/books',
     bookId: resolveBookId(),
     commentList: document.getElementById('commentList'),
     form: document.getElementById('commentForm'),
@@ -25,7 +27,7 @@
       text: ctx.form.text.value,
     };
     try {
-      const target = `${ctx.baseUrl}/books/${encodeURIComponent(ctx.bookId)}/comments`;
+      const target = `${ctx.booksApi}/${encodeURIComponent(ctx.bookId)}/comments`;
       const res = await fetch(target, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,7 +63,7 @@
         return;
       }
       try {
-        const res = await fetch(`${ctx.baseUrl}/comments/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const res = await fetch(`${ctx.apiBase}/comments/${encodeURIComponent(id)}`, { method: 'DELETE' });
         if (res.status === 204) {
           li.remove();
           return;

@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -87,6 +88,27 @@ public class JdbcCatalogRepository implements CatalogRepositoryPort {
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to check book existence: " + id, e);
+        }
+    }
+
+    @Override
+    public Book save(Book book) {
+        String sql = "INSERT INTO books (title, author, description) VALUES (?, ?, ?)";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, book.title());
+            statement.setString(2, book.author());
+            statement.setString(3, book.description());
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    long id = keys.getLong(1);
+                    return new Book(id, book.title(), book.author(), book.description());
+                }
+            }
+            throw new IllegalStateException("Failed to obtain generated id for book");
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to save book", e);
         }
     }
 

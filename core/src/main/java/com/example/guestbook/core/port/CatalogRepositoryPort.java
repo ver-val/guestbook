@@ -13,4 +13,6 @@ public interface CatalogRepositoryPort {
     Optional<Book> findById(long id);
 
     boolean existsById(long id);
+
+    Book save(Book book);
 }
