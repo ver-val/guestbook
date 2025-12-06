@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="uk">
+<meta charset="utf-8">
+<title>Коментарі до книги</title>
+<h1>Коментарі</h1>
+
+<div id="book-info"></div>
+<ul id="comments-list"></ul>
+
+<form id="comment-form">
+    <input type="hidden" name="bookId" id="bookId">
+    <p><input name="author" placeholder="Ваше ім'я" required maxlength="64"></p>
+    <p><textarea name="text" placeholder="Текст коментаря" required maxlength="1000"></textarea></p>
+    <p><button type="submit">Додати коментар</button></p>
+</form>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const bookId = params.get("bookId");
+const bookInfo = document.getElementById("book-info");
+const listEl = document.getElementById("comments-list");
+const form = document.getElementById("comment-form");
+document.getElementById("bookId").value = bookId ?? "";
+
+if (!bookId) {
+  document.body.innerHTML = "<p style='color:red'>Відсутній bookId у URL</p>";
+} else {
+  loadComments(bookId);
+}
+
+async function loadComments(id) {
+  try {
+    const res = await fetch(`/api/books/${id}`);
+    if (!res.ok) throw new Error(`Не вдалося завантажити коментарі (статус ${res.status})`);
+    const data = await res.json();
+    const book = data.book;
+    const comments = data.comments?.content ?? data.comments ?? [];
+
+    bookInfo.innerHTML = `<h2>${book.title}</h2><p>${book.author}</p><p>${book.description ?? ''}</p>`;
+
+    listEl.innerHTML = "";
+    if (!comments.length) {
+      listEl.innerHTML = "<li>Коментарів поки немає</li>";
+    } else {
+      for (const c of comments) {
+        const li = document.createElement("li");
+        li.innerHTML = `<b>${c.author}:</b> ${c.text}`;
+        listEl.appendChild(li);
+      }
+    }
+  } catch (err) {
+    document.body.innerHTML = `<p style="color:red">Помилка: ${err.message}</p>`;
+  }
+}
+
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!bookId) return;
+  const formData = new FormData(form);
+  const payload = {
+    author: formData.get("author"),
+    text: formData.get("text")
+  };
+  try {
+    const res = await fetch(`/api/books/${bookId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg);
+    }
+    form.reset();
+    await loadComments(bookId);
+  } catch (err) {
+    alert("Помилка: " + err.message);
+  }
+});
+</script>
+</html>

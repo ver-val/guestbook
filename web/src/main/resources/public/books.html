@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="uk">
+<meta charset="utf-8">
+<title>Каталог книг</title>
+<h1>Каталог книг</h1>
+<ul id="book-list"></ul>
+
+<script>
+async function loadBooks() {
+  try {
+    const res = await fetch('/api/books');
+    if (!res.ok) throw new Error(`Помилка ${res.status}`);
+    const data = await res.json();
+    const books = Array.isArray(data) ? data : (data.content ?? []);
+    const ul = document.getElementById('book-list');
+    ul.innerHTML = '';
+
+    if (!books.length) {
+      ul.innerHTML = '<li>Каталог порожній</li>';
+      return;
+    }
+
+    for (const b of books) {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <a href="/book-comments.html?bookId=${b.id}">
+          ${b.title} — ${b.author}
+        </a>`;
+      ul.appendChild(li);
+    }
+  } catch (err) {
+    document.body.innerHTML += `<p style="color:red">Помилка: ${err.message}</p>`;
+  }
+}
+
+loadBooks();
+</script>
+</html>
