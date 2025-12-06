@@ -1,9 +1,9 @@
 # Каталог книг (мульти-модульний Maven)
 
-Багатомодульний застосунок на **Java 21 + Servlets (Jetty 11) + JDBC + H2** із трьома модулями:
+Багатомодульний застосунок на **Java 21 + Spring Boot (MVC/Thymeleaf) + JDBC + H2** із трьома модулями:
 - `core` — доменні моделі, порти, бізнес-правила.
 - `persistence` — JDBC/H2-реалізації портів, ініціалізація схеми.
-- `web` — сервлети та HTTP API (war), запуск через Jetty.
+- `web` — Spring MVC + Thymeleaf (WAR, але запускається через Spring Boot).
 
 ## Вимоги
 - JDK 21
@@ -12,15 +12,21 @@
 
 ## Збірка та запуск
 ```bash
-# Запуск веб-модуля на Jetty 11
-mvn -pl web -am jetty:run
+# Зібрати всі модулі й покласти артефакти в локальний кеш (.m2 у корені репо)
+mvn -Dmaven.repo.local="$(pwd)/.m2" clean install
+
+# (опційно) почистити H2, якщо треба оновити схему/дані
+rm -f "$(pwd)/data/library".{mv,trace}.db
+
+# Запустити веб-модуль (Spring Boot)
+mvn -pl web -am -Dmaven.repo.local="$(pwd)/.m2" spring-boot:run
 ```
 
 Змінні середовища для БД (необов’язково):
 - `DB_URL` (default `jdbc:h2:file:./data/library;AUTO_SERVER=TRUE`)
 - `DB_USER` (default `sa`)
 - `DB_PASSWORD` (default ``)
-- `DB_INIT_DATA` (`true|false`, за замовчуванням true — заповнюється базовими книгами)
+- `DB_INIT_DATA` (`true|false`, за замовчуванням true — первинні книги додаються лише якщо таблиця пуста)
 
 ## HTTP API (UTF-8 + application/json)
 - `GET /books?q=&page=&size=&sort=` — список книг, сортування по `id|title|author` (`sort=title,desc`).

@@ -1,15 +1,20 @@
 package com.example.guestbook.web.config;
 
 import com.example.guestbook.core.spi.PersistenceConfig;
-import com.example.guestbook.persistence.jdbc.db.DbInit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.h2.jdbcx.JdbcDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import javax.sql.DataSource;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Optional;
 
 @Configuration
@@ -33,13 +38,35 @@ public class DataSourceConfig {
         ds.setUser(config.username());
         ds.setPassword(config.password());
 
-        new DbInit(ds).initialize(config.initializeData());
+        initializeDatabase(ds, config.initializeData());
         return ds;
     }
 
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper().findAndRegisterModules();
+    }
+
+    private void initializeDatabase(DataSource dataSource, boolean initData) {
+        // Always ensure schema; seed data only if requested and table is empty
+        ResourceDatabasePopulator schemaPopulator = new ResourceDatabasePopulator(new ClassPathResource("schema.sql"));
+        DatabasePopulatorUtils.execute(schemaPopulator, dataSource);
+
+        if (initData && isBooksTableEmpty(dataSource)) {
+            ResourceDatabasePopulator dataPopulator = new ResourceDatabasePopulator(new ClassPathResource("data.sql"));
+            DatabasePopulatorUtils.execute(dataPopulator, dataSource);
+        }
+    }
+
+    private boolean isBooksTableEmpty(DataSource dataSource) {
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM books")) {
+            return rs.next() && rs.getLong(1) == 0;
+        } catch (Exception e) {
+            // If table does not exist yet, let schema creation handle it
+            return true;
+        }
     }
 
     private void ensureDataDirectory(String jdbcUrl) {

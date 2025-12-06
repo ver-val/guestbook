@@ -143,6 +143,142 @@ body {
     gap: 1rem;
 }
 
+.topbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #2563eb;
+    margin-right: 0.75rem;
+    font-weight: 600;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.data-table th {
+    background: #f8fafc;
+}
+
+.actions a {
+    margin-right: 0.5rem;
+}
+
+.data-table td.actions {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.inline-form {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
+}
+
+.button {
+    display: inline-block;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    text-decoration: none;
+    border: 1px solid #d1d5db;
+    color: #111827;
+    background: #f9fafb;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.button.primary {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+.button.danger {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+.button.danger-outline {
+    background: transparent;
+    border-color: #ef4444;
+    color: #b91c1c;
+}
+
+.search {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.flash {
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.flash.success {
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+}
+
+.flash.error, .errors {
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
+    padding: 0.75rem;
+}
+
+.errors ul {
+    margin: 0.25rem 0 0 1.2rem;
+}
+
+.empty {
+    padding: 0.75rem 0;
+    color: #6b7280;
+}
+
+.card {
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.back-link {
+    text-decoration: none;
+    color: #2563eb;
+}
+
 .book-title {
     margin-bottom: 0.25rem;
 }

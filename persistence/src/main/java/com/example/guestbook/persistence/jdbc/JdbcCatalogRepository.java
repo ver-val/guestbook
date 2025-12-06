@@ -21,7 +21,7 @@ import java.util.Set;
 
 @Repository
 public class JdbcCatalogRepository implements CatalogRepositoryPort {
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "title", "author");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "title", "author", "pub_year");
     private final DataSource dataSource;
 
     public JdbcCatalogRepository(DataSource dataSource) {
@@ -42,7 +42,7 @@ public class JdbcCatalogRepository implements CatalogRepositoryPort {
         }
 
         String baseSql = "FROM books" + where;
-        String dataSql = "SELECT id, title, author, description " + baseSql +
+        String dataSql = "SELECT id, title, author, description, pub_year " + baseSql +
                 " ORDER BY " + normalizedSortField + " " + direction +
                 " LIMIT ? OFFSET ?";
         params.add(pageRequest.size());
@@ -62,7 +62,7 @@ public class JdbcCatalogRepository implements CatalogRepositoryPort {
 
     @Override
     public Optional<Book> findById(long id) {
-        String sql = "SELECT id, title, author, description FROM books WHERE id = ?";
+        String sql = "SELECT id, title, author, description, pub_year FROM books WHERE id = ?";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
@@ -92,18 +92,35 @@ public class JdbcCatalogRepository implements CatalogRepositoryPort {
     }
 
     @Override
+    public boolean deleteById(long id) {
+        String sql = "DELETE FROM books WHERE id = ?";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to delete book: " + id, e);
+        }
+    }
+
+    @Override
     public Book save(Book book) {
-        String sql = "INSERT INTO books (title, author, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO books (title, author, description, pub_year) VALUES (?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, book.title());
             statement.setString(2, book.author());
             statement.setString(3, book.description());
+            if (book.pubYear() == null) {
+                statement.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                statement.setInt(4, book.pubYear());
+            }
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     long id = keys.getLong(1);
-                    return new Book(id, book.title(), book.author(), book.description());
+                    return new Book(id, book.title(), book.author(), book.description(), book.pubYear());
                 }
             }
             throw new IllegalStateException("Failed to obtain generated id for book");
@@ -155,7 +172,13 @@ public class JdbcCatalogRepository implements CatalogRepositoryPort {
                 rs.getLong("id"),
                 rs.getString("title"),
                 rs.getString("author"),
-                rs.getString("description")
+                rs.getString("description"),
+                getInteger(rs, "pub_year")
         );
+    }
+
+    private Integer getInteger(ResultSet rs, String column) throws SQLException {
+        int value = rs.getInt(column);
+        return rs.wasNull() ? null : value;
     }
 }

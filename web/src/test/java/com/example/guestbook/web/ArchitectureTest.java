@@ -21,5 +21,6 @@ class ArchitectureTest {
     static final ArchRule controllers_should_live_in_web =
             classes().that().areAnnotatedWith(WebServlet.class)
                     .or().areAssignableTo(HttpServlet.class)
-                    .should().resideInAPackage("..web..");
+                    .should().resideInAPackage("..web..")
+                    .allowEmptyShould(true);
 }

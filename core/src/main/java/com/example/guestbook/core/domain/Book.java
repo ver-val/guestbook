@@ -4,6 +4,7 @@ public record Book(
         long id,
         String title,
         String author,
-        String description
+        String description,
+        Integer pubYear
 ) {
 }
