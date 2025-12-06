@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="header">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Book</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:fragment="topbar">
+    <div class="topbar">
+        <div class="nav-links">
+            <a th:href="@{/books}" th:text="#{title.books}">Книги</a>
+            <a th:href="@{/books(lang='uk')}" th:text="#{ui.lang.ua}">UA</a>
+            <a th:href="@{/books(lang='en')}" th:text="#{ui.lang.en}">EN</a>
+            <a th:href="@{/books(lang='fr')}" th:text="#{ui.lang.fr}">FR</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

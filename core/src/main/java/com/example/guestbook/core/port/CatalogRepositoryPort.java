@@ -15,4 +15,6 @@ public interface CatalogRepositoryPort {
     boolean existsById(long id);
 
     Book save(Book book);
+
+    boolean deleteById(long id);
 }

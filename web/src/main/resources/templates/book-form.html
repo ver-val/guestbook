@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header}"></head>
+<body>
+<div class="wrapper">
+    <div th:replace="~{fragments/header :: topbar}"></div>
+
+    <h1 th:text="#{label.addBook}">Додати книгу</h1>
+
+    <div th:if="${validationErrors}" class="errors">
+        <strong>Помилки валідації:</strong>
+        <ul>
+            <li th:each="entry : ${validationErrors.entrySet()}"
+                th:text="${entry.key + ': ' + entry.value}">Error</li>
+        </ul>
+    </div>
+    <div th:if="${errorMessage}" class="errors" th:text="${errorMessage}">Неочікувана помилка</div>
+
+    <form th:action="@{/books}" th:object="${book}" method="post" class="card form-card">
+        <input type="hidden" th:field="*{id}">
+        <label for="title" th:text="#{label.title}">Назва</label>
+        <input id="title" type="text" th:field="*{title}" required maxlength="255" th:placeholder="#{placeholder.title}" placeholder="Назва книги">
+
+        <label for="author" th:text="#{label.author}">Автор</label>
+        <input id="author" type="text" th:field="*{author}" required maxlength="255" th:placeholder="#{placeholder.author}" placeholder="Автор">
+
+        <label for="pubYear" th:text="#{label.year}">Рік видання</label>
+        <input id="pubYear" type="number" th:field="*{pubYear}" min="1" max="2100" th:placeholder="#{placeholder.year}" placeholder="Рік видання">
+
+        <label for="description" th:text="#{label.description}">Опис</label>
+        <textarea id="description" th:field="*{description}" maxlength="2000" th:placeholder="#{placeholder.description}" placeholder="Опис книги"></textarea>
+
+        <div class="actions">
+            <button type="submit" th:text="#{action.save}">Зберегти</button>
+            <a class="button" th:href="@{/books}" th:text="#{action.cancel}">Скасувати</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

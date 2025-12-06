@@ -1,9 +1,9 @@
 package com.example.guestbook.web.controller;
 
 import com.example.guestbook.core.domain.Book;
-import com.example.guestbook.core.domain.Comment;
 import com.example.guestbook.core.domain.PageRequest;
 import com.example.guestbook.core.domain.Sort;
+import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.service.CatalogService;
 import com.example.guestbook.core.service.CommentService;
 import org.springframework.stereotype.Controller;
@@ -16,13 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
-import java.util.Set;
 
 @Controller
 @RequestMapping
 public class BookPageController {
-
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "title", "author");
 
     private final CatalogService catalogService;
     private final CommentService commentService;
@@ -44,6 +41,31 @@ public class BookPageController {
         model.addAttribute("books", books.content());
         model.addAttribute("q", query == null ? "" : query);
         return "books";
+    }
+
+    @GetMapping("/books/new")
+    public String showAddForm(Model model) {
+        model.addAttribute("book", new Book(0, "", "", "", null));
+        return "book-form";
+    }
+
+    @PostMapping("/books")
+    public String addBook(Book book,
+                          Model model,
+                          RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.addBook(book.title(), book.author(), book.description(), book.pubYear());
+            redirectAttributes.addFlashAttribute("bookCreated", true);
+            return "redirect:/books";
+        } catch (ValidationException e) {
+            model.addAttribute("validationErrors", e.getErrors());
+            model.addAttribute("book", book);
+            return "book-form";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("book", book);
+            return "book-form";
+        }
     }
 
     @GetMapping("/books/{id}")
@@ -76,5 +98,16 @@ public class BookPageController {
                                 @RequestParam(name = "bookId") long bookId) {
         commentService.deleteComment(commentId);
         return "redirect:/books/" + bookId;
+    }
+
+    @PostMapping("/books/{id}/delete")
+    public String deleteBook(@PathVariable("id") long bookId, RedirectAttributes redirectAttributes) {
+        try {
+            catalogService.deleteBook(bookId);
+            redirectAttributes.addFlashAttribute("bookDeleted", true);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("bookDeleteError", e.getMessage());
+        }
+        return "redirect:/books";
     }
 }

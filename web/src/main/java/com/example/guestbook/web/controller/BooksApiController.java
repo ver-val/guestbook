@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,7 +72,7 @@ public class BooksApiController {
 
     @PostMapping
     public ResponseEntity<Book> addBook(@Valid @RequestBody CreateBookRequest request) {
-        Book saved = catalogService.addBook(request.title(), request.author(), request.description());
+        Book saved = catalogService.addBook(request.title(), request.author(), request.description(), request.pubYear());
         return ResponseEntity.created(URI.create("/api/books/" + saved.id())).body(saved);
     }
 
@@ -142,7 +144,8 @@ public class BooksApiController {
     private record CreateBookRequest(
             @NotBlank @Size(max = 255) String title,
             @NotBlank @Size(max = 255) String author,
-            @Size(max = 2000) String description
+            @Size(max = 2000) String description,
+            @Min(1) @Max(2100) Integer pubYear
     ) {
     }
 }

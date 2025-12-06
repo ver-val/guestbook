@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDate;
 
 @Service
 public class CatalogService {
@@ -36,7 +37,14 @@ public class CatalogService {
         }
     }
 
-    public Book addBook(String title, String author, String description) {
+    public void deleteBook(long id) {
+        ensureBookExists(id);
+        if (!catalogRepository.deleteById(id)) {
+            throw new ValidationException("Failed to delete book: " + id, Map.of());
+        }
+    }
+
+    public Book addBook(String title, String author, String description, Integer pubYear) {
         Map<String, String> errors = new HashMap<>();
         if (title == null || title.isBlank() || title.length() > 255) {
             errors.put("title", "required, up to 255 characters");
@@ -47,10 +55,22 @@ public class CatalogService {
         if (description != null && description.length() > 2000) {
             errors.put("description", "max 2000 characters");
         }
+        if (pubYear != null) {
+            int currentYear = LocalDate.now().getYear();
+            if (pubYear < 1 || pubYear > currentYear) {
+                errors.put("pubYear", "must be between 1 and " + currentYear);
+            }
+        }
         if (!errors.isEmpty()) {
             throw new ValidationException("Book validation failed", errors);
         }
-        Book toSave = new Book(0, title.trim(), author.trim(), description == null ? null : description.trim());
+        Book toSave = new Book(
+                0,
+                title.trim(),
+                author.trim(),
+                description == null ? null : description.trim(),
+                pubYear
+        );
         return catalogRepository.save(toSave);
     }
 }
