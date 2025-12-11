@@ -1,9 +1,9 @@
 # Каталог книг (мульти-модульний Maven)
 
-Багатомодульний застосунок на **Java 21 + Spring Boot (MVC/Thymeleaf) + JDBC + H2** із трьома модулями:
+Багатомодульний застосунок на **Java 21 + Spring Boot (MVC/FreeMarker) + JDBC + H2** із трьома модулями:
 - `core` — доменні моделі, порти, бізнес-правила.
 - `persistence` — JDBC/H2-реалізації портів, ініціалізація схеми.
-- `web` — Spring MVC + Thymeleaf (WAR, але запускається через Spring Boot).
+- `web` — Spring MVC + FreeMarker (WAR, але запускається через Spring Boot).
 
 ## Вимоги
 - JDK 21
@@ -55,6 +55,21 @@ mvn -pl web -am -Dmaven.repo.local="$(pwd)/.m2" spring-boot:run
 - SLF4J + Logback, console appenders, рівень ROOT=INFO.
 - INFO: створення/видалення коментарів з ключовими полями.
 - WARN: усі 4xx у веб-шарі, ERROR: 5xx.
+
+## Email/FreeMarker
+- Gmail SMTP конфігурується через env: `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `APP_MAIL_FROM`, `APP_MAIL_TO`.
+- HTML-шаблон листа: `web/src/main/resources/mail-templates/new_book.ftl` (логотип, рік, дата додавання, рідкісне видання, футер BookApp © 2025).
+- Відправка листа на додавання книги виконується в `MailService`, виклик у `BookPageController` після успішного створення книги.
+
+Приклад запуску з параметрами пошти:
+```bash
+export SPRING_MAIL_USERNAME="your@gmail.com"
+export SPRING_MAIL_PASSWORD="your_16char_app_password"
+export APP_MAIL_FROM="$SPRING_MAIL_USERNAME"
+export APP_MAIL_TO="recipient@example.com"
+
+mvn -pl web -am -Dmaven.repo.local="$(pwd)/.m2" spring-boot:run
+```
 
 ## Архітектурні правила (ArchUnit)
 - `web` не залежить від `persistence`.
