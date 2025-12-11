@@ -47,10 +47,17 @@
                             <#assign created = c.createdAt()>
                             <#if created?is_date>
                                 ${created?string("yyyy-MM-dd HH:mm")}
+                            <#elseif created?is_string && (created?length >= 16)>
+                                ${created?substring(0,16)?replace("T"," ")}
                             <#else>
                                 ${created!""}
                             </#if>
                         </span>
+                        <#if c.userId()??>
+                            <span class="small">
+                                <a href="/users/${c.userId()}/comments"><@spring.message "label.authorCommentsLink"/></a>
+                            </span>
+                        </#if>
                     </div>
                     <div>${c.text()}</div>
                     <form action="/comments/${c.id()}" method="post" style="margin-top:0.5rem;">
