@@ -8,12 +8,14 @@ import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDate;
 
 @Service
+@Transactional
 public class CatalogService {
     private final CatalogRepositoryPort catalogRepository;
 
@@ -21,16 +23,19 @@ public class CatalogService {
         this.catalogRepository = catalogRepository;
     }
 
+    @Transactional(readOnly = true)
     public Page<Book> searchBooks(String query, PageRequest pageRequest, Sort sort) {
         Sort effectiveSort = sort == null ? Sort.by("id", Sort.Direction.ASC) : sort;
         return catalogRepository.findBooks(query, pageRequest, effectiveSort);
     }
 
+    @Transactional(readOnly = true)
     public Book getBook(long id) {
         return catalogRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
     }
 
+    @Transactional(readOnly = true)
     public void ensureBookExists(long id) {
         if (!catalogRepository.existsById(id)) {
             throw new NotFoundException("Book not found: " + id);

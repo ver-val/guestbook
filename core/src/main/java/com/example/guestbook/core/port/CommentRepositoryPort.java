@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface CommentRepositoryPort {
     Page<Comment> findByBookId(long bookId, PageRequest pageRequest);
+    Page<Comment> findByUserId(long userId, PageRequest pageRequest);
 
     Comment save(Comment comment);
 
