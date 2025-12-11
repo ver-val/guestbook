@@ -6,6 +6,7 @@ import com.example.guestbook.core.domain.Sort;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.service.CatalogService;
 import com.example.guestbook.core.service.CommentService;
+import com.example.guestbook.web.mail.MailService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +24,12 @@ public class BookPageController {
 
     private final CatalogService catalogService;
     private final CommentService commentService;
+    private final MailService mailService;
 
-    public BookPageController(CatalogService catalogService, CommentService commentService) {
+    public BookPageController(CatalogService catalogService, CommentService commentService, MailService mailService) {
         this.catalogService = catalogService;
         this.commentService = commentService;
+        this.mailService = mailService;
     }
 
     @GetMapping("/")
@@ -54,7 +57,8 @@ public class BookPageController {
                           Model model,
                           RedirectAttributes redirectAttributes) {
         try {
-            catalogService.addBook(book.title(), book.author(), book.description(), book.pubYear());
+            Book saved = catalogService.addBook(book.title(), book.author(), book.description(), book.pubYear());
+            mailService.sendNewBookEmail(saved);
             redirectAttributes.addFlashAttribute("bookCreated", true);
             return "redirect:/books";
         } catch (ValidationException e) {
