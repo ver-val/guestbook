@@ -7,6 +7,7 @@ public record Comment(
         long bookId,
         String author,
         String text,
-        Instant createdAt
+        Instant createdAt,
+        Long userId
 ) {
 }

@@ -1,8 +1,8 @@
 # Каталог книг (мульти-модульний Maven)
 
-Багатомодульний застосунок на **Java 21 + Spring Boot (MVC/FreeMarker) + JDBC + H2** із трьома модулями:
+Багатомодульний застосунок на **Java 21 + Spring Boot (MVC/FreeMarker) + JPA/Flyway + H2** із трьома модулями:
 - `core` — доменні моделі, порти, бізнес-правила.
-- `persistence` — JDBC/H2-реалізації портів, ініціалізація схеми.
+- `persistence` — JPA/Flyway-реалізації портів, міграції БД.
 - `web` — Spring MVC + FreeMarker (WAR, але запускається через Spring Boot).
 
 ## Вимоги
@@ -18,15 +18,30 @@ mvn -Dmaven.repo.local="$(pwd)/.m2" clean install
 # (опційно) почистити H2, якщо треба оновити схему/дані
 rm -f "$(pwd)/data/library".{mv,trace}.db
 
-# Запустити веб-модуль (Spring Boot)
-mvn -pl web -am -Dmaven.repo.local="$(pwd)/.m2" spring-boot:run
+# Запустити веб-модуль (Spring Boot) зі шляху web/
+cd web
+mvn -Dmaven.repo.local="$(pwd)/../.m2" spring-boot:run
+cd ..
+
+## Міграції Flyway вручну (опційно)
+```bash
+export DB_URL="${DB_URL:-jdbc:h2:file:../data/library;AUTO_SERVER=TRUE}"
+export DB_USER="${DB_USER:-sa}"
+export DB_PASSWORD="${DB_PASSWORD:-}"
+
+mvn -pl persistence -Dmaven.repo.local="$(pwd)/.m2" \
+  org.flywaydb:flyway-maven-plugin:migrate \
+  -Dflyway.url="$DB_URL" \
+  -Dflyway.user="$DB_USER" \
+  -Dflyway.password="$DB_PASSWORD"
+```
 ```
 
 Змінні середовища для БД (необов’язково):
-- `DB_URL` (default `jdbc:h2:file:./data/library;AUTO_SERVER=TRUE`)
+- `DB_URL` (default `jdbc:h2:file:../data/library;AUTO_SERVER=TRUE`)
 - `DB_USER` (default `sa`)
 - `DB_PASSWORD` (default ``)
-- `DB_INIT_DATA` (`true|false`, за замовчуванням true — первинні книги додаються лише якщо таблиця пуста)
+- Flyway запускає міграції автоматично на старті.
 
 ## HTTP API (UTF-8 + application/json)
 - `GET /books?q=&page=&size=&sort=` — список книг, сортування по `id|title|author` (`sort=title,desc`).
