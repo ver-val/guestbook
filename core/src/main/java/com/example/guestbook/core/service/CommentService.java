@@ -3,12 +3,17 @@ package com.example.guestbook.core.service;
 import com.example.guestbook.core.domain.Comment;
 import com.example.guestbook.core.domain.Page;
 import com.example.guestbook.core.domain.PageRequest;
+import com.example.guestbook.core.domain.User;
 import com.example.guestbook.core.exception.ConflictException;
 import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
 import com.example.guestbook.core.port.CommentRepositoryPort;
 import com.example.guestbook.core.port.UserRepositoryPort;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -53,7 +58,9 @@ public class CommentService {
         if (bookId <= 0) {
             errors.put("bookId", "must be positive");
         }
-        if (author == null || author.isBlank() || author.length() > 64) {
+        Long userId = resolveCurrentUserId();
+        String authorName = author == null ? "" : author.trim();
+        if ((authorName.isBlank() && userId == null) || authorName.length() > 64) {
             errors.put("author", "required, up to 64 characters");
         }
         if (text == null || text.isBlank() || text.length() > 1000) {
@@ -67,10 +74,41 @@ public class CommentService {
             throw new NotFoundException("Book not found: " + bookId);
         }
 
-        Comment toSave = new Comment(0, bookId, author.trim(), text.trim(), Instant.now(clock), null);
+        if (authorName.isBlank() && userId != null) {
+            authorName = resolveCurrentUserName().orElse("Anonymous");
+        }
+
+        Comment toSave = new Comment(0, bookId, authorName, text.trim(), Instant.now(clock), userId);
         Comment saved = commentRepository.save(toSave);
         log.info("Comment created: id={}, bookId={}, author={}", saved.id(), saved.bookId(), saved.author());
         return saved;
+    }
+
+    private Long resolveCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return userRepository.findByUsername(auth.getName())
+                .map(User::id)
+                .orElse(null);
+    }
+
+    private java.util.Optional<String> resolveCurrentUserName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.ofNullable(auth.getName());
+    }
+
+    private boolean isCurrentUserAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +123,14 @@ public class CommentService {
     public void deleteComment(long commentId) {
         Comment existing = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+
+        boolean isAdmin = isCurrentUserAdmin();
+        Long currentUserId = resolveCurrentUserId();
+        if (!isAdmin) {
+            if (existing.userId() == null || currentUserId == null || !existing.userId().equals(currentUserId)) {
+                throw new ConflictException("You can delete only your own comments");
+            }
+        }
 
         Instant now = Instant.now(clock);
         Duration sinceCreation = Duration.between(existing.createdAt(), now);

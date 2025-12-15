@@ -6,7 +6,7 @@ import com.example.guestbook.core.domain.Sort;
 import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.service.CatalogService;
 import com.example.guestbook.core.service.CommentService;
-import com.example.guestbook.web.mail.MailService;
+import com.example.guestbook.web.service.NotificationService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
@@ -24,12 +25,12 @@ public class BookPageController {
 
     private final CatalogService catalogService;
     private final CommentService commentService;
-    private final MailService mailService;
+    private final NotificationService notificationService;
 
-    public BookPageController(CatalogService catalogService, CommentService commentService, MailService mailService) {
+    public BookPageController(CatalogService catalogService, CommentService commentService, NotificationService notificationService) {
         this.catalogService = catalogService;
         this.commentService = commentService;
-        this.mailService = mailService;
+        this.notificationService = notificationService;
     }
 
     @GetMapping("/")
@@ -43,6 +44,7 @@ public class BookPageController {
         var books = catalogService.searchBooks(Optional.ofNullable(query).orElse(""), pageRequest, pageRequest.sort());
         model.addAttribute("books", books.content());
         model.addAttribute("q", query == null ? "" : query);
+
         return "books";
     }
 
@@ -58,7 +60,7 @@ public class BookPageController {
                           RedirectAttributes redirectAttributes) {
         try {
             Book saved = catalogService.addBook(book.title(), book.author(), book.description(), book.pubYear());
-            mailService.sendNewBookEmail(saved);
+            notificationService.notifyNewBook(saved);
             redirectAttributes.addFlashAttribute("bookCreated", true);
             return "redirect:/books";
         } catch (ValidationException e) {

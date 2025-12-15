@@ -9,9 +9,18 @@
 <div class="wrapper">
     <@topbar/>
 
+    <#assign adminFlag = false>
+    <#if isAdmin?? && isAdmin>
+        <#assign adminFlag = true>
+    <#elseif request?has_content && request.isUserInRole?has_content && request.isUserInRole("ADMIN")>
+        <#assign adminFlag = true>
+    </#if>
+
     <header class="page-header">
         <h1><@spring.message "title.books"/></h1>
-        <a class="button primary" href="/books/new"><@spring.message "label.addBook"/></a>
+        <#if adminFlag>
+            <a class="button primary" href="/books/new"><@spring.message "label.addBook"/></a>
+        </#if>
     </header>
 
     <#if bookCreated?? && bookCreated>
@@ -42,12 +51,21 @@
                     <td>${book.title()}</td>
                     <td>${book.author()}</td>
                     <td><#if book.pubYear()??>${book.pubYear()?c}<#else>—</#if></td>
-                    <td>${book.description()!""}</td>
+                    <td title="${book.description()!''}">
+                        <#assign desc = book.description()!''>
+                        <#if (desc?length > 140)>
+                            ${desc?substring(0, 140)}...
+                        <#else>
+                            ${desc}
+                        </#if>
+                    </td>
                     <td class="actions">
                         <a class="button primary" href="/books/${book.id()}"><@spring.message "action.view"/></a>
-                        <form class="inline-form" action="/books/${book.id()}/delete" method="post">
-                            <button type="submit" class="button danger-outline"><@spring.message "action.delete"/></button>
-                        </form>
+                        <#if adminFlag>
+                            <form class="inline-form" action="/books/${book.id()}/delete" method="post">
+                                <button type="submit" class="button danger-outline"><@spring.message "action.delete"/></button>
+                            </form>
+                        </#if>
                     </td>
                 </tr>
             </#list>

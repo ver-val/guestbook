@@ -4,6 +4,8 @@ public record User(
         long id,
         String username,
         String password,
-        String role
+        String role,
+        String email,
+        boolean enabled
 ) {
 }

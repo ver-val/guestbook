@@ -28,6 +28,12 @@ public class UserEntity {
     @Column(nullable = false, length = 32)
     private String role;
 
+    @Column(length = 255)
+    private String email;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentEntity> comments = new ArrayList<>();
 
@@ -61,6 +67,22 @@ public class UserEntity {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public List<CommentEntity> getComments() {

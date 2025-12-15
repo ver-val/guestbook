@@ -7,7 +7,8 @@
 </head>
 <body>
 <div class="wrapper">
-    <@topbar/>
+    <#assign safePath = "/users/" + (userId!"") + "/comments">
+    <@topbar currentPath=safePath/>
 
     <h1><@spring.message "label.userComments"/>: ${username}</h1>
     <a href="/books" class="back-link">&larr; <@spring.message "action.back"/></a>

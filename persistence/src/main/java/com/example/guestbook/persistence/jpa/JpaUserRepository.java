@@ -24,12 +24,38 @@ public class JpaUserRepository implements UserRepositoryPort {
         return userRepository.findById(id).map(this::toDomain);
     }
 
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username).map(this::toDomain);
+    }
+
+    @Override
+    public User save(User user) {
+        UserEntity entity = new UserEntity();
+        if (user.id() > 0) {
+            entity.setId(user.id());
+        }
+        entity.setUsername(user.username());
+        entity.setPassword(user.password());
+        entity.setRole(user.role());
+        entity.setEmail(user.email());
+        entity.setEnabled(user.enabled());
+        return toDomain(userRepository.save(entity));
+    }
+
+    @Override
+    public java.util.List<User> findAll() {
+        return userRepository.findAll().stream().map(this::toDomain).toList();
+    }
+
     private User toDomain(UserEntity entity) {
         return new User(
                 entity.getId(),
                 entity.getUsername(),
                 entity.getPassword(),
-                entity.getRole()
+                entity.getRole(),
+                entity.getEmail(),
+                entity.isEnabled()
         );
     }
 }

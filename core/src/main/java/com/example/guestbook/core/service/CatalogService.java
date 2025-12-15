@@ -9,6 +9,7 @@ import com.example.guestbook.core.exception.ValidationException;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +43,7 @@ public class CatalogService {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteBook(long id) {
         ensureBookExists(id);
         if (!catalogRepository.deleteById(id)) {
@@ -49,6 +51,7 @@ public class CatalogService {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public Book addBook(String title, String author, String description, Integer pubYear) {
         Map<String, String> errors = new HashMap<>();
         if (title == null || title.isBlank() || title.length() > 255) {

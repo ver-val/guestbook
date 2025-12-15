@@ -35,13 +35,22 @@ mvn -pl persistence -Dmaven.repo.local="$(pwd)/.m2" \
   -Dflyway.user="$DB_USER" \
   -Dflyway.password="$DB_PASSWORD"
 ```
-```
 
 Змінні середовища для БД (необов’язково):
 - `DB_URL` (default `jdbc:h2:file:../data/library;AUTO_SERVER=TRUE`)
 - `DB_USER` (default `sa`)
 - `DB_PASSWORD` (default ``)
 - Flyway запускає міграції автоматично на старті.
+
+## Безпека та ролі
+- Form-login `/login` / `/logout`, ролі `USER` та `ADMIN`.
+- Доступ: `GET /books/**` — USER/ADMIN; `POST /books/*/comments` — USER/ADMIN; решта `/books/**` та `/api/**` — лише ADMIN; `GET /books/new` — лише ADMIN.
+- Для `/api/**` 401/403 віддаються в JSON (без HTML), для MVC-сторінок — сторінки 401/403/404.
+- Видалення коментаря: адмін — будь-який; користувач — лише свій і в межах 24 годин після створення (інакше 409).
+
+## Підтвердження email
+- Реєстрація створює користувача disabled, відправляє лист із токеном підтвердження.
+- На екрані логіну показується підказка “Перевірте email, щоб завершити реєстрацію”.
 
 ## HTTP API (UTF-8 + application/json)
 - `GET /books?q=&page=&size=&sort=` — список книг, сортування по `id|title|author` (`sort=title,desc`).

@@ -9,6 +9,8 @@
 <div class="wrapper" data-book-id="${book.id()}">
     <@topbar currentId=book.id()/>
 
+    <#assign authenticated = (isAuthenticated?? && isAuthenticated) || (currentUser??)>
+
     <a href="/books" class="back-link">&larr; <@spring.message "action.back"/></a>
 
 <h1>${book.title()}</h1>
@@ -18,14 +20,24 @@
     <div><strong><@spring.message "label.description"/>:</strong> ${book.description()!""}</div>
     </div>
 
-    <section class="comment-form card">
-        <h3><@spring.message "label.addComment"/></h3>
-        <form class="comment-form" action="/books/${book.id()}/comments" method="post">
-            <input type="text" name="author" placeholder="${springMacroRequestContext.getMessage('placeholder.author')}" maxlength="64" required>
-            <textarea name="text" placeholder="${springMacroRequestContext.getMessage('placeholder.comment')}" maxlength="1000" required></textarea>
-            <button type="submit" class="button primary"><@spring.message "action.submit"/></button>
-        </form>
-    </section>
+    <#if authenticated>
+        <section class="comment-form card">
+            <h3><@spring.message "label.addComment"/></h3>
+            <form class="comment-form" action="/books/${book.id()}/comments" method="post">
+                <#assign authorName = (currentUser.username())!"" />
+                <#if authorName?has_content>
+                    <div class="comment-author-label">
+                        <@spring.message "label.loggedInAs"/> ${authorName}
+                    </div>
+                    <input type="hidden" name="author" value="${authorName}">
+                <#else>
+                    <input type="text" name="author" placeholder="${springMacroRequestContext.getMessage('placeholder.author')}" maxlength="64" required>
+                </#if>
+                <textarea name="text" placeholder="${springMacroRequestContext.getMessage('placeholder.comment')}" maxlength="1000" required></textarea>
+                <button type="submit" class="button primary"><@spring.message "action.submit"/></button>
+            </form>
+        </section>
+    </#if>
 
     <#if commentSuccess??>
         <div class="flash success auto-hide"><@spring.message "msg.commentAdded"/></div>
@@ -43,6 +55,7 @@
                 <div class="comment">
                     <div class="comment-meta">
                         <strong>${c.author()}</strong>
+                        <#assign isOwner = (currentUser?? && c.userId()?? && (c.userId() == currentUser.id()))>
                         <span class="small">
                             <#assign created = c.createdAt()>
                             <#if created?is_date>
@@ -59,15 +72,22 @@
                             </span>
                         </#if>
                     </div>
-                    <div>${c.text()}</div>
-                    <form action="/comments/${c.id()}" method="post" style="margin-top:0.5rem;">
-                        <input type="hidden" name="bookId" value="${book.id()}">
-                        <button type="submit" class="button danger"><@spring.message "action.delete"/></button>
-                    </form>
+                    <div class="comment-row">
+                        <div class="comment-body">${c.text()}</div>
+                        <#assign adminFlag = (isAdmin?? && isAdmin) || (springMacroRequestContext?has_content && springMacroRequestContext.isUserInRole?has_content && springMacroRequestContext.isUserInRole("ADMIN"))>
+                        <#if adminFlag || isOwner>
+                            <div class="comment-actions">
+                                <form action="/comments/${c.id()}" method="post" class="inline-form">
+                                    <input type="hidden" name="bookId" value="${book.id()}">
+                                    <button type="submit" class="button danger-outline"><@spring.message "action.delete"/></button>
+                                </form>
+                            </div>
+                        </#if>
+                    </div>
                 </div>
-            </#list>
-        </#if>
-    </section>
+           </#list>
+       </#if>
+   </section>
 </div>
 <script>
     setTimeout(() => {
