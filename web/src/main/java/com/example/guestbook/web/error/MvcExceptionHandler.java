@@ -22,4 +22,13 @@ public class MvcExceptionHandler {
         mv.addObject("errorMessage", ex.getMessage());
         return mv;
     }
+
+    @ExceptionHandler(Exception.class)
+    public ModelAndView handleGeneric(Exception ex) {
+        log.error("Unexpected MVC error", ex);
+        ModelAndView mv = new ModelAndView("error/500");
+        mv.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        mv.addObject("errorMessage", ex.getMessage());
+        return mv;
+    }
 }
