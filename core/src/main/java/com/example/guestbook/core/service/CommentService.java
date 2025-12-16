@@ -4,9 +4,13 @@ import com.example.guestbook.core.domain.Comment;
 import com.example.guestbook.core.domain.Page;
 import com.example.guestbook.core.domain.PageRequest;
 import com.example.guestbook.core.domain.User;
-import com.example.guestbook.core.exception.ConflictException;
+import com.example.guestbook.core.exception.BookNotFoundException;
+import com.example.guestbook.core.exception.CommentTooOldException;
 import com.example.guestbook.core.exception.NotFoundException;
 import com.example.guestbook.core.exception.ValidationException;
+import com.example.guestbook.core.exception.ForbiddenCommentContentException;
+import com.example.guestbook.core.exception.InvalidCommentDeleteException;
+import com.example.guestbook.core.exception.ConflictException;
 import com.example.guestbook.core.port.CatalogRepositoryPort;
 import com.example.guestbook.core.port.CommentRepositoryPort;
 import com.example.guestbook.core.port.UserRepositoryPort;
@@ -30,6 +34,7 @@ import java.util.Map;
 public class CommentService {
     private static final Logger log = LoggerFactory.getLogger(CommentService.class);
     private static final Duration DELETE_WINDOW = Duration.ofHours(24);
+    private static final java.util.List<String> FORBIDDEN_WORDS = java.util.List.of("spam", "abuse");
 
     private final CommentRepositoryPort commentRepository;
     private final CatalogRepositoryPort catalogRepository;
@@ -70,6 +75,8 @@ public class CommentService {
             throw new ValidationException("Comment validation failed", errors);
         }
 
+        ensureContentAllowed(text.trim());
+
         if (!catalogRepository.existsById(bookId)) {
             throw new NotFoundException("Book not found: " + bookId);
         }
@@ -82,6 +89,45 @@ public class CommentService {
         Comment saved = commentRepository.save(toSave);
         log.info("Comment created: id={}, bookId={}, author={}", saved.id(), saved.bookId(), saved.author());
         return saved;
+    }
+
+    /**
+     * Deletes a comment with strict validation (ids, 24h window, ownership handled elsewhere).
+     */
+    public void delete(long bookId, long commentId) {
+        Map<String, String> errors = new HashMap<>();
+        if (bookId <= 0) {
+            errors.put("bookId", "must be positive");
+        }
+        if (commentId <= 0) {
+            errors.put("commentId", "must be positive");
+        }
+        if (!errors.isEmpty()) {
+            throw new InvalidCommentDeleteException("Comment delete validation failed", errors);
+        }
+
+        if (!catalogRepository.existsById(bookId)) {
+            throw new BookNotFoundException("Book not found: " + bookId);
+        }
+
+        Comment existing = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
+
+        if (existing.bookId() != bookId) {
+            throw new ConflictException("Comment does not belong to book " + bookId);
+        }
+
+        Instant now = Instant.now(clock);
+        Duration sinceCreation = Duration.between(existing.createdAt(), now);
+        if (sinceCreation.compareTo(DELETE_WINDOW) > 0) {
+            throw new CommentTooOldException("Comment can be deleted only within 24 hours after creation");
+        }
+
+        if (commentRepository.deleteById(commentId)) {
+            log.info("Comment deleted: id={}, bookId={}", commentId, bookId);
+        } else {
+            throw new NotFoundException("Failed to delete comment: " + commentId);
+        }
     }
 
     private Long resolveCurrentUserId() {
@@ -111,6 +157,14 @@ public class CommentService {
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
+    public void ensureContentAllowed(String text) {
+        String normalized = text.toLowerCase();
+        boolean forbidden = FORBIDDEN_WORDS.stream().anyMatch(normalized::contains);
+        if (forbidden) {
+            throw new ForbiddenCommentContentException("Comment contains forbidden content");
+        }
+    }
+
     @Transactional(readOnly = true)
     public Page<Comment> getCommentsByUser(long userId, PageRequest pageRequest) {
         if (userId <= 0) {
@@ -131,17 +185,7 @@ public class CommentService {
                 throw new ConflictException("You can delete only your own comments");
             }
         }
-
-        Instant now = Instant.now(clock);
-        Duration sinceCreation = Duration.between(existing.createdAt(), now);
-        if (sinceCreation.compareTo(DELETE_WINDOW) > 0) {
-            throw new ConflictException("Comment can be deleted only within 24 hours after creation");
-        }
-
-        if (commentRepository.deleteById(commentId)) {
-            log.info("Comment deleted: id={}, bookId={}", commentId, existing.bookId());
-        } else {
-            throw new NotFoundException("Failed to delete comment: " + commentId);
-        }
+        // Reuse strict validation method
+        delete(existing.bookId(), existing.id());
     }
 }

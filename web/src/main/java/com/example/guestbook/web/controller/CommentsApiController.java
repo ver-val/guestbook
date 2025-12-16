@@ -4,6 +4,7 @@ import com.example.guestbook.core.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,9 +18,17 @@ public class CommentsApiController {
         this.commentService = commentService;
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteComment(@PathVariable long id) {
         commentService.deleteComment(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteComment(
+            @RequestParam("bookId") long bookId,
+            @RequestParam("commentId") long commentId) {
+        commentService.delete(bookId, commentId);
         return ResponseEntity.noContent().build();
     }
 }

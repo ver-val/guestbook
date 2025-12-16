@@ -77,10 +77,9 @@
                         <#assign adminFlag = (isAdmin?? && isAdmin) || (springMacroRequestContext?has_content && springMacroRequestContext.isUserInRole?has_content && springMacroRequestContext.isUserInRole("ADMIN"))>
                         <#if adminFlag || isOwner>
                             <div class="comment-actions">
-                                <form action="/comments/${c.id()}" method="post" class="inline-form">
-                                    <input type="hidden" name="bookId" value="${book.id()}">
-                                    <button type="submit" class="button danger-outline"><@spring.message "action.delete"/></button>
-                                </form>
+                                <button type="button" class="button danger-outline" onclick="deleteComment(${book.id()}, ${c.id()})">
+                                    <@spring.message "action.delete"/>
+                                </button>
                             </div>
                         </#if>
                     </div>
@@ -93,6 +92,28 @@
     setTimeout(() => {
         document.querySelectorAll('.flash.auto-hide').forEach(el => el.style.display = 'none');
     }, 3000);
+
+    function deleteComment(bookId, commentId) {
+        fetch(`/api/comments?bookId=${bookId}&commentId=${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Accept': 'application/json' }
+        }).then(async (response) => {
+            if (!response.ok) {
+                let msg = 'Delete failed';
+                try {
+                    const body = await response.json();
+                    if (body && body.error) {
+                        msg = body.error;
+                    }
+                } catch (_) {
+                    // ignore parsing errors
+                }
+                alert(msg);
+                return;
+            }
+            window.location.reload();
+        });
+    }
 </script>
 </body>
 </html>

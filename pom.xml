@@ -101,6 +101,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.5</version>
                     <configuration>
+                        <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
                         <useModulePath>false</useModulePath>
                         <failIfNoTests>false</failIfNoTests>
                         <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
@@ -123,6 +124,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
                     <useModulePath>false</useModulePath>
                     <failIfNoTests>false</failIfNoTests>
                     <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
