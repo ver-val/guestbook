@@ -20,15 +20,18 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final AccountConfirmationService confirmationService;
     private final MailService mailService;
+    private final boolean mailEnabled;
 
     public AuthController(UserService userService,
                           PasswordEncoder passwordEncoder,
                           AccountConfirmationService confirmationService,
-                          MailService mailService) {
+                          MailService mailService,
+                          @org.springframework.beans.factory.annotation.Value("${app.mail.enabled:true}") boolean mailEnabled) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.confirmationService = confirmationService;
         this.mailService = mailService;
+        this.mailEnabled = mailEnabled;
     }
 
     @GetMapping("/login")
@@ -58,9 +61,14 @@ public class AuthController {
         try {
             var created = userService.register(username, email, passwordEncoder.encode(password), "USER");
             var token = confirmationService.createToken(created);
-            mailService.sendConfirmationEmail(created, token.token());
+            if (mailEnabled) {
+                mailService.sendConfirmationEmail(created, token.token());
+                redirectAttributes.addFlashAttribute("confirmEmailSent", true);
+            } else {
+                confirmationService.confirm(token.token());
+                redirectAttributes.addFlashAttribute("confirmed", true);
+            }
             redirectAttributes.addFlashAttribute("registered", true);
-            redirectAttributes.addFlashAttribute("confirmEmailSent", true);
             return "redirect:/login";
         } catch (ValidationException e) {
             model.addAttribute("errors", e.getErrors());

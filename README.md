@@ -82,6 +82,7 @@ mvn -pl persistence -Dmaven.repo.local="$(pwd)/.m2" \
 
 ## Email/FreeMarker
 - Gmail SMTP конфігурується через env: `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `APP_MAIL_FROM`.
+- Вимкнення email: `APP_MAIL_ENABLED=false` (реєстрація авто-підтверджується).
 - HTML-шаблон листа: `web/src/main/resources/mail-templates/new_book.ftl` (логотип, рік, дата додавання, рідкісне видання, футер BookApp © 2025).
 - Відправка листа на додавання книги виконується в `MailService`, виклик у `BookPageController` після успішного створення книги.
 
