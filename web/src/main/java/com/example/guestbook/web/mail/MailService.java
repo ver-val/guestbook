@@ -25,18 +25,25 @@ public class MailService {
     private final EmailTemplateProcessor templateProcessor;
     private final String fromAddress;
     private final String confirmBaseUrl;
+    private final boolean mailEnabled;
 
     public MailService(JavaMailSender mailSender,
                        EmailTemplateProcessor templateProcessor,
                        @Value("${app.mail.from:}") String fromAddress,
-                       @Value("${app.confirm.base-url:http://localhost:8080}") String confirmBaseUrl) {
+                       @Value("${app.confirm.base-url:http://localhost:8080}") String confirmBaseUrl,
+                       @Value("${app.mail.enabled:true}") boolean mailEnabled) {
         this.mailSender = mailSender;
         this.templateProcessor = templateProcessor;
         this.fromAddress = fromAddress;
         this.confirmBaseUrl = confirmBaseUrl;
+        this.mailEnabled = mailEnabled;
     }
 
     public void sendNewBookEmail(Book book) {
+        if (!mailEnabled) {
+            log.info("Email sending disabled, skipping new book notification");
+            return;
+        }
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Map<String, Object> model = new HashMap<>();
         model.put("title", book.title());
@@ -52,6 +59,10 @@ public class MailService {
 
     @Async
     public void sendNewBookEmailToRecipients(Book book, Iterable<String> recipients) {
+        if (!mailEnabled) {
+            log.info("Email sending disabled, skipping new book recipients");
+            return;
+        }
         for (String recipient : recipients) {
             try {
                 sendNewBookEmailToRecipient(book, recipient);
@@ -62,6 +73,10 @@ public class MailService {
     }
 
     private void sendNewBookEmailToRecipient(Book book, String recipient) {
+        if (!mailEnabled) {
+            log.info("Email sending disabled, skipping recipient {}", recipient);
+            return;
+        }
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Map<String, Object> model = new HashMap<>();
         model.put("title", book.title());
@@ -89,6 +104,10 @@ public class MailService {
     }
 
     public void sendConfirmationEmail(User user, String token) {
+        if (!mailEnabled) {
+            log.info("Email sending disabled, skipping confirmation for user='{}'", user.username());
+            return;
+        }
         Map<String, Object> model = new HashMap<>();
         model.put("username", user.username());
         model.put("confirmLink", confirmBaseUrl + "/confirm?code=" + token);

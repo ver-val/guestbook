@@ -28,6 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/login", "/register", "/confirm", "/error/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/books/new").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/books/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/books/*/comments").hasAnyRole("USER", "ADMIN")
