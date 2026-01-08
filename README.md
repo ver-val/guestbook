@@ -81,7 +81,7 @@ mvn -pl persistence -Dmaven.repo.local="$(pwd)/.m2" \
 - WARN: усі 4xx у веб-шарі, ERROR: 5xx.
 
 ## Email/FreeMarker
-- Gmail SMTP конфігурується через env: `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `APP_MAIL_FROM`, `APP_MAIL_TO`.
+- Gmail SMTP конфігурується через env: `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, `APP_MAIL_FROM`.
 - HTML-шаблон листа: `web/src/main/resources/mail-templates/new_book.ftl` (логотип, рік, дата додавання, рідкісне видання, футер BookApp © 2025).
 - Відправка листа на додавання книги виконується в `MailService`, виклик у `BookPageController` після успішного створення книги.
 
@@ -90,7 +90,6 @@ mvn -pl persistence -Dmaven.repo.local="$(pwd)/.m2" \
 export SPRING_MAIL_USERNAME="your@gmail.com"
 export SPRING_MAIL_PASSWORD="your_16char_app_password"
 export APP_MAIL_FROM="$SPRING_MAIL_USERNAME"
-export APP_MAIL_TO="recipient@example.com"
 
 mvn -pl web -am -Dmaven.repo.local="$(pwd)/.m2" spring-boot:run
 ```
